@@ -380,5 +380,20 @@ class TwelveDataManager:
             return symbol
 
 
-# Create a singleton instance
-twelve_data_manager = TwelveDataManager() 
+class _LazyTwelveDataManager:
+    """Defers building TwelveDataManager until an attribute is first used.
+
+    Importing this module therefore no longer requires TWELVE_API_KEY; a
+    missing key still stops the run, but only when Twelve Data is called.
+    """
+
+    _instance = None
+
+    def __getattr__(self, name):
+        if _LazyTwelveDataManager._instance is None:
+            _LazyTwelveDataManager._instance = TwelveDataManager()
+        return getattr(_LazyTwelveDataManager._instance, name)
+
+
+# Shared singleton, created on first use
+twelve_data_manager = _LazyTwelveDataManager()

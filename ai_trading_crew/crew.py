@@ -2,7 +2,7 @@ from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
 import os
 import yaml
-from ai_trading_crew.config import settings, DEFAULT_STOCKTWITS_LLM, PROJECT_LLM, DEFAULT_TI_LLM, DEEPSEEK_OPENROUTER_LLM, AGENT_OUTPUTS_FOLDER, AGENT_INPUTS_FOLDER, RELEVANT_ARTICLES_FILE, LOG_FOLDER
+from ai_trading_crew.config import settings, get_llm, AGENT_OUTPUTS_FOLDER, AGENT_INPUTS_FOLDER, RELEVANT_ARTICLES_FILE, LOG_FOLDER
 from ai_trading_crew.utils.dates import get_today_str, get_yesterday_str, get_today_str_no_min
 import inspect
 
@@ -26,10 +26,10 @@ class BaseCrewClass:
 	"""Base class for all AI trading crews"""
 	
 	
-	def __init__(self, symbol, stocktwit_llm=DEFAULT_STOCKTWITS_LLM, technical_ind_llm=DEFAULT_TI_LLM):
+	def __init__(self, symbol, stocktwit_llm=None, technical_ind_llm=None):
 		self.symbol = symbol
-		self.stocktwit_llm = stocktwit_llm
-		self.technical_ind_llm = technical_ind_llm
+		self.stocktwit_llm = stocktwit_llm or get_llm("DEFAULT_STOCKTWITS_LLM")
+		self.technical_ind_llm = technical_ind_llm or get_llm("DEFAULT_TI_LLM")
 
 
 
@@ -40,7 +40,7 @@ class AiArticlesPickerCrew(BaseCrewClass):
 	agents_config = 'config/agents_article.yaml'
 	tasks_config = 'config/tasks_article.yaml'
 
-	def __init__(self, symbol, stocktwit_llm=DEFAULT_STOCKTWITS_LLM, technical_ind_llm=DEFAULT_TI_LLM):
+	def __init__(self, symbol, stocktwit_llm=None, technical_ind_llm=None):
 		super().__init__(symbol, stocktwit_llm, technical_ind_llm)
 
 	@agent
@@ -48,7 +48,7 @@ class AiArticlesPickerCrew(BaseCrewClass):
 		return Agent(
 			config=self.agents_config['relevant_news_filter_agent'],
 			verbose=True,
-			llm=DEEPSEEK_OPENROUTER_LLM
+			llm=get_llm("DEEPSEEK_OPENROUTER_LLM")
 		)
 
 	@task  # UN-commented but kept inactive through crew configuration
@@ -80,7 +80,7 @@ class StockComponentsSummarizeCrew(BaseCrewClass):
 	agents_config = 'config/agents.yaml'
 	tasks_config = 'config/tasks.yaml'
 
-	def __init__(self, symbol, stocktwit_llm=DEFAULT_STOCKTWITS_LLM, technical_ind_llm=DEFAULT_TI_LLM, additional_agents=None, additional_tasks=None):
+	def __init__(self, symbol, stocktwit_llm=None, technical_ind_llm=None, additional_agents=None, additional_tasks=None):
 		super().__init__(symbol, stocktwit_llm, technical_ind_llm)
 		self.additional_agents = additional_agents or []
 		self.additional_tasks = additional_tasks or []
@@ -90,7 +90,7 @@ class StockComponentsSummarizeCrew(BaseCrewClass):
 		return Agent(
 			config=self.agents_config['news_summarizer_agent'],
 			verbose=True,
-			llm=DEEPSEEK_OPENROUTER_LLM
+			llm=get_llm("DEEPSEEK_OPENROUTER_LLM")
 		)
 
 	@agent  # UN-commented but kept inactive through crew configuration
@@ -115,7 +115,7 @@ class StockComponentsSummarizeCrew(BaseCrewClass):
 		return Agent(
 			config=self.agents_config['fundamental_analysis_agent'],
 			verbose=True,
-			llm=PROJECT_LLM
+			llm=get_llm("PROJECT_LLM")
 		)
 
 	@agent
@@ -123,7 +123,7 @@ class StockComponentsSummarizeCrew(BaseCrewClass):
 		return Agent(
 			config=self.agents_config['timegpt_analyst_agent'],
 			verbose=True,
-			llm=PROJECT_LLM
+			llm=get_llm("PROJECT_LLM")
 		)
 
 
@@ -164,7 +164,7 @@ class StockComponentsSummarizeCrew(BaseCrewClass):
 		return Task(
 			config=config,
 			output_file=os.path.join(AGENT_OUTPUTS_FOLDER, today_str_no_min, self.symbol, 'fundamental_analysis_summary_report.md'),
-			llm=PROJECT_LLM,
+			llm=get_llm("PROJECT_LLM"),
 			verbose=True
 		)
 
@@ -228,7 +228,7 @@ class DayTraderAdvisorCrew:
 		return Agent(
 			config=self.agents_config['day_trader_advisor_agent'],
 			verbose=True,
-			llm=DEEPSEEK_OPENROUTER_LLM
+			llm=get_llm("DEEPSEEK_OPENROUTER_LLM")
 		)
 
 	def day_trader_recommendation_task(self) -> Task:

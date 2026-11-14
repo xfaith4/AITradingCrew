@@ -1,5 +1,6 @@
 import os
 import warnings
+from functools import lru_cache
 from typing import List
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -147,9 +148,39 @@ def extract_provider_name(model_name: str) -> str:
 #OpenRouter DeepSeek R1 is used for all LLM operations in the system
 
 DEFAULT_PROJECT_LLM = "OPENROUTER_DEEPSEEK_R1"
-DEFAULT_STOCKTWITS_LLM = create_default_llm("OPENROUTER_API_KEY", "OPENROUTER_DEEPSEEK_R1", "OPENROUTER_BASE_URL")
-DEFAULT_TI_LLM = create_default_llm("OPENROUTER_API_KEY", "OPENROUTER_DEEPSEEK_R1", "OPENROUTER_BASE_URL")
-DEEPSEEK_OPENROUTER_LLM = create_default_llm("OPENROUTER_API_KEY", "OPENROUTER_DEEPSEEK_R1", "OPENROUTER_BASE_URL")
+
+# Extract provider name from model name
+provider_name = extract_provider_name(DEFAULT_PROJECT_LLM)
+
+# LLM clients are built on first use rather than at import time, so modules
+# that only need settings or paths (tests, reports, the dashboard) can import
+# this file without API keys. Each name gets its own cached client.
+_LLM_SPECS = {
+    "PROJECT_LLM": (f"{provider_name}_API_KEY", DEFAULT_PROJECT_LLM, f"{provider_name}_BASE_URL"),
+    "DEFAULT_STOCKTWITS_LLM": ("OPENROUTER_API_KEY", "OPENROUTER_DEEPSEEK_R1", "OPENROUTER_BASE_URL"),
+    "DEFAULT_TI_LLM": ("OPENROUTER_API_KEY", "OPENROUTER_DEEPSEEK_R1", "OPENROUTER_BASE_URL"),
+    "DEEPSEEK_OPENROUTER_LLM": ("OPENROUTER_API_KEY", "OPENROUTER_DEEPSEEK_R1", "OPENROUTER_BASE_URL"),
+}
+
+
+@lru_cache(maxsize=None)
+def get_llm(name: str = "PROJECT_LLM") -> LLM:
+    """Return the named LLM client, creating it on first use.
+
+    Raises EnvironmentError if a required environment variable is missing.
+    """
+    try:
+        api, model, url = _LLM_SPECS[name]
+    except KeyError:
+        raise ValueError(f"Unknown LLM name '{name}'. Valid names: {', '.join(_LLM_SPECS)}") from None
+    return create_default_llm(api, model, url)
+
+
+def __getattr__(name: str):
+    # Keeps `config.PROJECT_LLM` and friends working for existing callers.
+    if name in _LLM_SPECS:
+        return get_llm(name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 OUTPUT_FOLDER  = "output"
@@ -169,15 +200,6 @@ if not os.path.exists(AGENT_OUTPUTS_FOLDER):
     os.makedirs(AGENT_OUTPUTS_FOLDER)
 if not os.path.exists(LOG_FOLDER):
     os.makedirs(LOG_FOLDER)
-
-# Extract provider name from model name
-provider_name = extract_provider_name(DEFAULT_PROJECT_LLM)
-
-PROJECT_LLM = create_default_llm(
-    f"{provider_name}_API_KEY",
-    DEFAULT_PROJECT_LLM,
-    f"{provider_name}_BASE_URL"
-)
 
 # Instantiate settings object
 settings = Settings()

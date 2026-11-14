@@ -1,5 +1,5 @@
 from crewai import Agent, Task
-from ai_trading_crew.config import PROJECT_LLM, AGENT_OUTPUTS_FOLDER, settings
+from ai_trading_crew.config import get_llm, AGENT_OUTPUTS_FOLDER, settings
 from ai_trading_crew.utils.dates import get_today_str_no_min
 import yaml
 import os
@@ -28,7 +28,7 @@ class MarketOverviewAnalyst:
         return Agent(
             config=self.agents_config['market_overview_agent'],
             verbose=False,
-            llm=PROJECT_LLM
+            llm=get_llm("PROJECT_LLM")
         )
 
     def market_overview_task(self) -> Task:
