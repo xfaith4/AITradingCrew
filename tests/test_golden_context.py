@@ -34,6 +34,7 @@ from ai_trading_crew.analysts import (
     fundamental_analysis,
     market_overview,
     social,
+    stock_headlines_fetcher,
     technical_indicators,
     timegpt,
 )
@@ -303,3 +304,45 @@ def _forecast_frame() -> pd.DataFrame:
 def test_timegpt_format_golden(symbol, company, golden):
     actual = timegpt.format_timegpt_forecast(_forecast_frame(), symbol, company)
     assert_golden(golden, actual)
+
+
+# ---------------------------------------------------------------------------
+# News headlines
+# ---------------------------------------------------------------------------
+# The four scrapers are replaced with fixed item lists, so these goldens pin
+# the merge, filter, dedupe, headline clean-up, and formatting in
+# fetch_stock_news and get_news_context. Per-scraper HTML parsing is X4.
+
+_NEWS_SCRAPERS = {
+    "finviz": "fetch_finviz_news",
+    "tipranks": "fetch_tipranks_news",
+    "seeking_alpha": "fetch_seeking_alpha_news",
+    "marketwatch": "fetch_marketwatch_news",
+}
+
+
+def _patch_news_sources(monkeypatch, sources: dict[str, list[dict]]) -> None:
+    for key, func_name in _NEWS_SCRAPERS.items():
+        items = [
+            stock_headlines_fetcher.NewsItem(
+                headline=raw["headline"],
+                url=raw["url"],
+                source=raw["source"],
+                published_at=datetime.fromisoformat(raw["published_at"]),
+            )
+            for raw in sources.get(key, [])
+        ]
+        monkeypatch.setattr(stock_headlines_fetcher, func_name, lambda ticker, start, _items=items: list(_items))
+    monkeypatch.setattr(stock_headlines_fetcher, "get_company_name", lambda symbol: "Apple Inc.")
+
+
+def test_news_context_golden(monkeypatch):
+    _patch_news_sources(monkeypatch, json.loads(read_input("news_AAPL_sources.json")))
+    actual = stock_headlines_fetcher.get_news_context("AAPL", "2026-11-11")
+    assert_golden("news_AAPL", actual)
+
+
+def test_news_context_empty_golden(monkeypatch):
+    _patch_news_sources(monkeypatch, {})
+    actual = stock_headlines_fetcher.get_news_context("AAPL", "2026-11-11 09:30")
+    assert_golden("news_AAPL_empty", actual)

@@ -10,6 +10,11 @@ import json
 import dateutil.parser
 from ai_trading_crew.utils.company_info import get_company_name
 import os
+import logging
+from pydantic import ValidationError
+from ai_trading_crew import models
+
+logger = logging.getLogger(__name__)
 
 @dataclass
 class NewsItem:
@@ -724,12 +729,29 @@ def fetch_stock_news(ticker: str, start_time: Union[str, int]) -> List[NewsItem]
     deduplicated_news.sort(key=lambda x: x.published_at, reverse=True)
     return deduplicated_news
 
-def get_news_context(symbol: str, start_time: str) -> str:
+def fetch_news(symbol: str, start_time: Union[str, int]) -> List[models.NewsItem]:
+    """Fetch merged, deduplicated headlines as A2 ``NewsItem`` models, newest first (A4).
+
+    Items whose headline, URL, or source is empty after whitespace stripping
+    cannot form a valid model and are dropped with a warning.
     """
-    Get formatted news context for a stock symbol since a specific time.
-    """
-    news_items = fetch_stock_news(symbol, start_time)
-    company_name = get_company_name(symbol)
+    items = []
+    for raw in fetch_stock_news(symbol, start_time):
+        try:
+            items.append(models.NewsItem(
+                symbol=symbol,
+                headline=raw.headline,
+                url=raw.url,
+                source=raw.source,
+                published_at=raw.published_at,
+            ))
+        except ValidationError as exc:
+            logger.warning("Dropping malformed news item for %s from %s: %s", symbol, raw.source, exc.errors()[0]["msg"])
+    return items
+
+
+def format_news(news_items: List[models.NewsItem], company_name: str, start_time: str) -> str:
+    """Render headlines as the news prompt text."""
     if not news_items:
         return f"No news found for {company_name} since {start_time}"
     
@@ -772,3 +794,11 @@ def get_news_context(symbol: str, start_time: str) -> str:
     result = result.encode('ascii', 'replace').decode('ascii')
     
     return result
+
+
+def get_news_context(symbol: str, start_time: str) -> str:
+    """
+    Get formatted news context for a stock symbol since a specific time.
+    """
+    news_items = fetch_news(symbol, start_time)
+    return format_news(news_items, get_company_name(symbol), start_time)

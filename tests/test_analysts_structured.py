@@ -21,7 +21,13 @@ import pytz
 import talib
 
 from ai_trading_crew import models as m
-from ai_trading_crew.analysts import fundamental_analysis, social, technical_indicators, timegpt
+from ai_trading_crew.analysts import (
+    fundamental_analysis,
+    social,
+    stock_headlines_fetcher,
+    technical_indicators,
+    timegpt,
+)
 from ai_trading_crew.config import settings
 from ai_trading_crew.store import RunStore
 from test_golden_context import (
@@ -29,6 +35,7 @@ from test_golden_context import (
     FakeTwelveData,
     _forecast_frame,
     _fundamental_router,
+    _patch_news_sources,
     make_ohlcv,
     read_input,
 )
@@ -295,3 +302,48 @@ def test_format_forecast_point_matches_golden(store, symbol, company, name):
         store.save_forecasts(RUN_ID, [point])
         (restored,) = store.get_forecasts(RUN_ID, symbol)
         assert timegpt.format_forecast_point(restored, company) == golden(name)
+
+
+# ---------------------------------------------------------------------------
+# News headlines
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def fake_news(monkeypatch):
+    _patch_news_sources(monkeypatch, json.loads(read_input("news_AAPL_sources.json")))
+
+
+def test_fetch_news_returns_a2_items_newest_first(fake_news):
+    items = stock_headlines_fetcher.fetch_news("AAPL", "2026-11-11")
+    assert len(items) == 8
+    assert all(isinstance(item, m.NewsItem) and item.symbol == "AAPL" for item in items)
+    assert [i.published_at for i in items] == sorted((i.published_at for i in items), reverse=True)
+    assert len({i.url for i in items}) == len(items)
+    assert not any("/topic/" in i.url or "/category/" in i.url for i in items)
+    # TipRanks "Premium" and category prefixes are stripped before the model is built.
+    assert "Apple Stock: Why the Street Stays Bullish" in [i.headline for i in items]
+
+
+def test_format_news_matches_golden(fake_news, store):
+    items = stock_headlines_fetcher.fetch_news("AAPL", "2026-11-11")
+    assert stock_headlines_fetcher.format_news(items, "Apple Inc.", "2026-11-11") == golden("news_AAPL")
+
+    store.save_news(RUN_ID, items)
+    stored = store.get_news(RUN_ID, "AAPL")
+    assert stock_headlines_fetcher.format_news(stored, "Apple Inc.", "2026-11-11") == golden("news_AAPL")
+
+
+def test_format_news_empty_matches_golden():
+    assert stock_headlines_fetcher.format_news([], "Apple Inc.", "2026-11-11 09:30") == golden("news_AAPL_empty")
+
+
+def test_blank_news_item_is_dropped_with_a_warning(monkeypatch, caplog):
+    published = datetime(2026, 11, 13, 15, 0, tzinfo=timezone.utc)
+    _patch_news_sources(monkeypatch, {"finviz": [
+        {"headline": "   ", "url": "https://finviz.com/news/1", "source": "Finviz", "published_at": published.isoformat()},
+        {"headline": "Apple ships", "url": "https://finviz.com/news/2", "source": "Finviz", "published_at": published.isoformat()},
+    ]})
+    with caplog.at_level(logging.WARNING, logger=stock_headlines_fetcher.__name__):
+        items = stock_headlines_fetcher.fetch_news("AAPL", "2026-11-11")
+    assert [i.headline for i in items] == ["Apple ships"]
+    assert "Dropping malformed news item for AAPL from Finviz" in caplog.text
