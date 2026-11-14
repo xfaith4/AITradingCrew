@@ -13,6 +13,7 @@ logging.basicConfig(level=logging.INFO)
 
 # Import settings from config
 from ai_trading_crew.config import settings, AGENT_INPUTS_FOLDER
+from ai_trading_crew.models import ForecastPoint
 from ai_trading_crew.utils.dates import get_today_str_no_min
 from ai_trading_crew.utils.twelve_data_manager import twelve_data_manager
 
@@ -123,15 +124,36 @@ def get_timegpt_forecast(symbols: List[str] = settings.SYMBOLS, time_series_defa
     return df_forecast
 
 
-def format_timegpt_forecast(forecast_df: pd.DataFrame, symbol: str, company_name: str) -> str:
+def fetch_forecast_point(forecast_df: pd.DataFrame, symbol: str) -> Optional[ForecastPoint]:
+    """Pick one symbol's forecast out of the frame ``get_timegpt_forecast`` returns (A4).
+
+    TimeGPT is called once for all symbols, so the network fetch is
+    ``get_timegpt_forecast``; this turns its row for ``symbol`` into a
+    ForecastPoint. ``TimeGPT`` values are already scaled to percent there.
+    Returns None when the frame has no row for the symbol.
+    """
     symbol_forecast = forecast_df[forecast_df['unique_id'] == symbol]
-    
-    if not symbol_forecast.empty:
-        forecast_date = symbol_forecast['ds'].iloc[0].strftime('%Y-%m-%d')
-        forecast_value = symbol_forecast['TimeGPT'].iloc[0]
-        return f"Forecast date for {company_name}: {forecast_date}\nForecast daily return: {forecast_value:.4f} %"
-    else:
+    if symbol_forecast.empty:
+        return None
+    return ForecastPoint(
+        symbol=symbol,
+        ds=pd.Timestamp(symbol_forecast['ds'].iloc[0]).date(),
+        predicted_return_pct=float(symbol_forecast['TimeGPT'].iloc[0]),
+    )
+
+
+def format_forecast_point(point: Optional[ForecastPoint], company_name: str) -> str:
+    """Render a ForecastPoint (or its absence) as the TimeGPT prompt text."""
+    if point is None:
         return f"No TimeGPT forecast available for {company_name}"
+    return (
+        f"Forecast date for {company_name}: {point.ds.strftime('%Y-%m-%d')}\n"
+        f"Forecast daily return: {point.predicted_return_pct:.4f} %"
+    )
+
+
+def format_timegpt_forecast(forecast_df: pd.DataFrame, symbol: str, company_name: str) -> str:
+    return format_forecast_point(fetch_forecast_point(forecast_df, symbol), company_name)
 
 
 class TwelveDataHandler:

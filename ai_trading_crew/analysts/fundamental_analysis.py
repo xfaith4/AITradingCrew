@@ -1,36 +1,119 @@
+import logging
 import requests
 from bs4 import BeautifulSoup
 import re
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from typing import Optional
+
+from pydantic import ValidationError
+
+from ai_trading_crew.models import FundamentalSnapshot
+
+logger = logging.getLogger(__name__)
+
+_SECTION_SEPARATOR = f"\n\n{'='*80}\n\n"
+
+
+@dataclass(frozen=True)
+class FundamentalData:
+    """What ``fetch_fundamentals`` returns (A4).
+
+    ``snapshot`` is the A2 record: the Finviz metrics table plus the analyst
+    consensus, price targets and intrinsic value parsed from the scraped
+    sections. ``sections`` keeps the four scraped prose sections (Finviz,
+    TipRanks AI analysis, TipRanks forecast, ValueInvesting.io) in that
+    order, because the prompt text carries prose the A2 model does not hold.
+    """
+
+    snapshot: FundamentalSnapshot
+    sections: tuple[str, str, str, str]
+
+
+def fetch_fundamentals(symbol: str, as_of: Optional[datetime] = None) -> FundamentalData:
+    """Scrape Finviz, TipRanks, and ValueInvesting.io for ``symbol``.
+
+    A failing source becomes an error line in its section, as before, and
+    leaves the matching snapshot fields empty. ``as_of`` defaults to now (UTC).
+    """
+    finviz_text, metrics = _scrape_finviz(symbol)
+    sections = (
+        finviz_text,
+        _get_tipranks_data(symbol),
+        _get_tipranks_forecast(symbol),
+        _get_valueinvesting_data(symbol),
+    )
+    snapshot = _build_fundamental_snapshot(
+        symbol, as_of or datetime.now(timezone.utc), metrics, sections[2], sections[3]
+    )
+    return FundamentalData(snapshot=snapshot, sections=sections)
+
+
+def format_fundamental_context(data: FundamentalData) -> str:
+    """Render fetched fundamentals as the four-section prompt text."""
+    return _SECTION_SEPARATOR.join(data.sections)
 
 
 def get_fundamental_context(symbol: str) -> str:
     """
     Get formatted fundamental analysis context for a stock symbol from Finviz, TipRanks, and ValueInvesting.io.
-    
+
     Args:
         symbol (str): Stock symbol
-        
+
     Returns:
         str: Four sections - Finviz fundamental data, TipRanks AI analysis, TipRanks Analyst Forecast, and ValueInvesting.io Intrinsic Value
     """
-    # Section 1: Finviz Fundamental Data
-    finviz_result = _get_finviz_data(symbol)
-    
-    # Section 2: TipRanks AI Stock Analysis  
-    tipranks_result = _get_tipranks_data(symbol)
-    
-    # Section 3: TipRanks Analyst Forecast
-    forecast_result = _get_tipranks_forecast(symbol)
-    
-    # Section 4: ValueInvesting.io Intrinsic Value Analysis
-    value_result = _get_valueinvesting_data(symbol)
-    
-    # Combine all four sections
-    return f"{finviz_result}\n\n{'='*80}\n\n{tipranks_result}\n\n{'='*80}\n\n{forecast_result}\n\n{'='*80}\n\n{value_result}"
+    return format_fundamental_context(fetch_fundamentals(symbol))
+
+
+def _parse_number(text: Optional[str]) -> Optional[float]:
+    if not text:
+        return None
+    try:
+        return float(text.replace(",", ""))
+    except ValueError:
+        return None
+
+
+def _bullet_value(section: str, label: str, pattern: str) -> Optional[str]:
+    """Value of a ``• **<label>**: <value>`` line written by the extractors below."""
+    match = re.search(rf"• \*\*{re.escape(label)}\*\*: {pattern}", section)
+    return match.group(1).strip() if match else None
+
+
+def _build_fundamental_snapshot(
+    symbol: str, as_of: datetime, metrics: dict[str, str], forecast_text: str, value_text: str
+) -> FundamentalSnapshot:
+    number = r"\$?(-?[\d,]+(?:\.\d+)?)"
+    fields = {
+        "symbol": symbol,
+        "as_of": as_of,
+        "metrics": metrics,
+        "analyst_consensus": _bullet_value(forecast_text, "Overall Rating", r"(.+)"),
+        "intrinsic_value": _parse_number(_bullet_value(value_text, "Intrinsic Value", number)),
+    }
+    targets = {
+        "price_target_low": _parse_number(_bullet_value(forecast_text, "Lowest Price Target", number)),
+        "price_target_avg": _parse_number(_bullet_value(forecast_text, "Average Price Target", number)),
+        "price_target_high": _parse_number(_bullet_value(forecast_text, "Highest Price Target", number)),
+    }
+    try:
+        return FundamentalSnapshot(**fields, **targets)
+    except ValidationError as exc:
+        # Scraped targets can be inconsistent (e.g. avg outside low..high). The
+        # prompt text is unaffected, so keep the rest of the record.
+        logger.warning("Dropping inconsistent TipRanks price targets for %s: %s", symbol, exc)
+        return FundamentalSnapshot(**fields)
 
 
 def _get_finviz_data(symbol: str) -> str:
     """Get fundamental data from Finviz"""
+    return _scrape_finviz(symbol)[0]
+
+
+def _scrape_finviz(symbol: str) -> tuple[str, dict[str, str]]:
+    """Scrape Finviz: the section text and the metrics table ``{label: value}`` as scraped."""
     url = f"https://finviz.com/quote.ashx?t={symbol}&p=d"
     
     headers = {
@@ -133,7 +216,7 @@ def _get_finviz_data(symbol: str) -> str:
         
         # Format the output
         if not fundamentals:
-            return f"No fundamental data found for {company_name} ({symbol})"
+            return f"No fundamental data found for {company_name} ({symbol})", {}
         
         result = f"FINVIZ Fundamental Ratios/KPIs for {company_name} ({symbol}):\n\n"
         
@@ -149,11 +232,13 @@ def _get_finviz_data(symbol: str) -> str:
             result += "\n".join(bullet_points)
         else:
             result += "No fundamental data found in the expected format."
-        
-        return result
-        
+
+        return result, {label: data['value'] for label, data in fundamentals.items()}
+
     except Exception as e:
-        return f"Error fetching fundamental data for {company_name} ({symbol}): {str(e)}"
+        # company_name is unbound when requests.get fails, so this line raises
+        # UnboundLocalError (ROADMAP X8, pinned by a strict xfail golden test).
+        return f"Error fetching fundamental data for {company_name} ({symbol}): {str(e)}", {}
 
 
 def _get_tipranks_data(symbol: str) -> str:

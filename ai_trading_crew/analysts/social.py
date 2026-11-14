@@ -1,8 +1,11 @@
 import os
+import re
 import json
 import datetime
 import pytz
 import http.client
+
+from ai_trading_crew.models import SentimentSnapshot
 
 
 def fetch_stocktwits_messages(symbol : str, desired_count : int, lower_bound : datetime):
@@ -90,11 +93,44 @@ def format_stocktwits_data(symbol: str, messages: list, bullish: int, bearish: i
         f"Messages:\n" + "\n".join(messages) + "\n"
     )
 
-def get_stocktwits_context(symbol: str, fetch_limit: int, since_date: datetime) -> str:
-    """Get formatted StockTwits data for a symbol."""
-    messages, bullish, bearish, neutral = fetch_stocktwits_messages(
-        symbol,
-        fetch_limit,
-        since_date
+# A message line is "<time>: <body>". SentimentSnapshot strips whitespace from
+# each item, so an empty body loses the space after the colon; this pattern
+# spots that case so the formatter can restore the original line.
+_EMPTY_BODY_LINE = re.compile(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} \w+:")
+
+
+def fetch_stocktwits_sentiment(
+    symbol: str,
+    fetch_limit: int,
+    since_date: datetime.datetime,
+    as_of: datetime.datetime | None = None,
+) -> SentimentSnapshot:
+    """Fetch StockTwits messages and tag counts as a SentimentSnapshot (A4).
+
+    ``messages`` holds one ``"<time>: <body>"`` line per message, newest
+    first, as the API returns them. ``as_of`` defaults to now (UTC).
+    """
+    messages, bullish, bearish, neutral = fetch_stocktwits_messages(symbol, fetch_limit, since_date)
+    return SentimentSnapshot(
+        symbol=symbol,
+        as_of=as_of or datetime.datetime.now(datetime.timezone.utc),
+        bullish=bullish,
+        bearish=bearish,
+        neutral=neutral,
+        messages=[line.removeprefix("- ").removesuffix("\n") for line in messages],
     )
-    return format_stocktwits_data(symbol, messages, bullish, bearish, neutral)
+
+
+def format_stocktwits_sentiment(snapshot: SentimentSnapshot) -> str:
+    """Render a SentimentSnapshot as the StockTwits prompt text."""
+    lines = []
+    for message in snapshot.messages:
+        if _EMPTY_BODY_LINE.fullmatch(message):
+            message += " "
+        lines.append(f"- {message}\n")
+    return format_stocktwits_data(snapshot.symbol, lines, snapshot.bullish, snapshot.bearish, snapshot.neutral)
+
+
+def get_stocktwits_context(symbol: str, fetch_limit: int, since_date: datetime.datetime) -> str:
+    """Get formatted StockTwits data for a symbol."""
+    return format_stocktwits_sentiment(fetch_stocktwits_sentiment(symbol, fetch_limit, since_date))
