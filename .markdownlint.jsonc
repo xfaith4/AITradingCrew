@@ -1,0 +1,12 @@
+// markdownlint rule configuration (editor authoring aid, not a CI gate).
+// Mirrors the portfolio convention in GitHubRepoManagement/.markdownlint.jsonc.
+{
+  // ROADMAP.md repeats `### Product outcomes`, `### Acceptance criteria`, etc.
+  // under each `## Release X.Y` section by contract design. `siblings_only`
+  // still flags a genuine duplicate inside a single release.
+  "MD024": { "siblings_only": true },
+
+  // README.md and ROADMAP.md are read rendered; long table rows and milestone
+  // bullets are intentional, and no repo-wide line-length limit exists.
+  "MD013": false
+}

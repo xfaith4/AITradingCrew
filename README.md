@@ -41,11 +41,13 @@ For a deep dive into how this AI agent system works in practice and to see a rea
 The system follows a sophisticated three-phase approach:
 
 ### Phase 1: 🌍 Market Conditions Analysis
+
 - Analyzes VIX volatility and global market environment
 - Processes S&P 500 (SPY) as market overview indicator
 - Monitors international indices, currencies, and overnight developments
 
 ### Phase 2: 🔍 Individual Stock Analysis (6 Specialized Agents)
+
 1. **📰 News Summarizer Agent**: Processes breaking news from TipRanks, FinViz, Seeking Alpha, MarketWatch
 2. **📱 Sentiment Summarizer Agent**: Analyzes 500+ StockTwits posts for retail sentiment
 3. **📈 Technical Indicator Agent**: Calculates 20+ indicators (RSI, MACD, Bollinger Bands, etc.)
@@ -58,6 +60,7 @@ The system follows a sophisticated three-phase approach:
 ## 🚀 Installation & Setup
 
 ### Prerequisites
+
 - Python 3.10+ (< 3.13)
 - [UV](https://docs.astral.sh/uv/) or [Poetry](https://python-poetry.org/) (recommended) or pip
 
@@ -70,6 +73,7 @@ The system follows a sophisticated three-phase approach:
 uv add crewai[tools]
 
 # Or using poetry
+pip install poetry
 poetry add "crewai[tools]"
 
 # Or using pip
@@ -77,6 +81,7 @@ pip install "crewai[tools]"
 ```
 
 ### 2. Clone and Install the Project
+
 ```bash
 # Clone the repository
 git clone https://github.com/philippe-ostiguy/AITradingCrew.git

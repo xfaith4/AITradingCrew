@@ -48,11 +48,14 @@ output_files/
 uv.lock
 
 # Reports and generated files
-*.md
-!README.md
-*.png
-*.html
-*.txt
+# The pipeline writes its reports under output/; the scrapers drop
+# *_response.html debug pages in the working directory. Source Markdown
+# (README.md, ROADMAP.md, docs/), test fixtures, and templates are tracked.
+output/
+*_response.html
+
+# Claude Code session state (local, per-session)
+.claude/state/
 
 # Database files
 *.sqlite3
