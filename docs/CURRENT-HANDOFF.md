@@ -2,6 +2,15 @@
 
 > Active operational context only. Newest entry first.
 
+## 2026-11-13 — A4 fetch_/format_ split for four analysts (A4 next)
+
+- **Did:** Commit 81016ba (local, not pushed). technical_indicators.py: fetch_technical_data returns TechnicalData (IndicatorSnapshot + PriceBars + quote), format_ti_context. social.py: fetch_stocktwits_sentiment returns SentimentSnapshot, format_stocktwits_sentiment. fundamental_analysis.py: fetch_fundamentals returns FundamentalData (FundamentalSnapshot + four prose sections; drops inconsistent price targets with a warning), format_fundamental_context. timegpt.py: fetch_forecast_point returns ForecastPoint, format_forecast_point. get_*_context are now thin wrappers. Added tests/test_analysts_structured.py (22 tests: golden equality, run-store round trips, comparison against the legacy TwelveTI path). ROADMAP: A4 progress note (left open), added X10 (Ichimoku sys.exit) and X11 (remove dead legacy TwelveTI methods).
+- **Verified:** uv run pytest tests/test_golden_context.py tests/test_analysts_structured.py -q: 32 passed, 1 xfailed (X8 strict xfail). uv run pytest -q: 110 passed, 1 xfailed. Roadmap validator: score 100, L4, exit 0 (existing house-style warnings only). Not verified: a live keyed run.
+- **Progress:** Roadmap progress appended: 4/53 items done, phases 0/0, 49 open-items left -> docs/ROADMAP-PROGRESS.md
+- **Safe to proceed:** yes; tests green, A4 work committed locally on main, not pushed
+- **Next:** Finish A4: add a golden for stock_headlines_fetcher.get_news_context, then split it into fetch_news (list[NewsItem]) and format_news; decide whether VIX/global market need a new A2 model or get carved out of A4 before stamping it
+- **Owner:** Approve pushing to the fork; provide .env for a keyed run to record live fixtures (A1); decide on keyless demo-data slice.
+
 ## 2026-11-13 — Golden prompt-text fixtures for analyst context builders (A3) (A4 next)
 
 - **Did:** Added tests/test_golden_context.py (11 tests: TI context, VIX, global market, StockTwits x2 + pagination, fundamentals full + partial failure, TimeGPT x2, strict xfail for Finviz UnboundLocalError). Inputs in tests/fixtures/golden/inputs (synthetic provider-shaped: deterministic OHLCV, Twelve Data quote, Yahoo chart, StockTwits pages, trimmed Finviz/TipRanks/ValueInvesting HTML); 9 goldens in tests/fixtures/golden/expected, regenerate with UPDATE_GOLDENS=1. Added .gitattributes (golden dir -text, repo has autocrlf=true). ROADMAP: A3 stamped done; added X8 (finviz UnboundLocalError) and X9 (sys.exit in TwelveDataManager bypasses per-asset except). Committed on main (local, not pushed).
