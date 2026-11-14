@@ -2,6 +2,15 @@
 
 > Active operational context only. Newest entry first.
 
+## 2026-11-13 — Pushed A3/A4-partial to fork, finished A4 (news split), added A11 demo slice and A12 market series (A11 next)
+
+- **Did:** Pushed 4ca639b..17d83c7 to origin (owner-approved). Commit f2755aa: stock_headlines_fetcher.fetch_news returns list[models.NewsItem] (drops blank items with a warning), format_news renders unchanged text, get_news_context is a thin wrapper. Goldens news_AAPL and news_AAPL_empty from tests/fixtures/golden/inputs/news_AAPL_sources.json (scrapers stubbed). 4 tests in tests/test_analysts_structured.py incl. RunStore round trip. ROADMAP: A4 stamped done; VIX/global market carved out to new A12; new A11 keyless demo-data slice (owner-approved). f2755aa not pushed.
+- **Verified:** uv run pytest -q: 116 passed, 1 xfailed. A4 check (test_golden_context + test_analysts_structured): 38 passed, 1 xfailed. Invoke-RoadmapValidation.ps1 (from GitHubRepoManagement root): exit 0, score 100, L4. markdownlint ROADMAP.md: 0 issues. Not verified: live keyed run. Env vars checked (names only): OPENROUTER_*, TWELVE_API_KEY, RAPID_API_KEY, TIMEGPT_API_KEY are not set at Process, User, or Machine scope; only OpenAI and Anthropic keys exist.
+- **Progress:** Roadmap progress appended: 5/55 items done, phases 0/0, 50 open-items left -> docs/ROADMAP-PROGRESS.md
+- **Safe to proceed:** yes; tests green, tree clean after commit, f2755aa local only
+- **Next:** A11: ai_trading_crew/demo.py seed_demo_run(store) from synthetic fixtures through the A4 fetch_* functions, demo flag on the run manifest; check: uv run pytest tests/test_demo_seed.py -q
+- **Owner:** Set OPENROUTER_API_KEY/BASE_URL/model vars, TWELVE_API_KEY, RAPID_API_KEY, TIMEGPT_API_KEY (or say where they live) for the keyed run; approve pushing f2755aa.
+
 ## 2026-11-13 — A4 fetch_/format_ split for four analysts (A4 next)
 
 - **Did:** Commit 81016ba (local, not pushed). technical_indicators.py: fetch_technical_data returns TechnicalData (IndicatorSnapshot + PriceBars + quote), format_ti_context. social.py: fetch_stocktwits_sentiment returns SentimentSnapshot, format_stocktwits_sentiment. fundamental_analysis.py: fetch_fundamentals returns FundamentalData (FundamentalSnapshot + four prose sections; drops inconsistent price targets with a warning), format_fundamental_context. timegpt.py: fetch_forecast_point returns ForecastPoint, format_forecast_point. get_*_context are now thin wrappers. Added tests/test_analysts_structured.py (22 tests: golden equality, run-store round trips, comparison against the legacy TwelveTI path). ROADMAP: A4 progress note (left open), added X10 (Ichimoku sys.exit) and X11 (remove dead legacy TwelveTI methods).
