@@ -1,0 +1,26 @@
+FINVIZ Fundamental Ratios/KPIs for Apple Inc. (AAPL):
+
+• Major index membership: DJIA, NDX, S&P 500
+• Price-to-Earnings (ttm): 34.12
+• Diluted EPS (ttm): 6.43
+• Market capitalization: 3301.55B
+• Forward Price-to-Earnings (next fiscal year): 29.80
+• Return on Assets (ttm): 27.15%
+• Return on Equity (ttm): 151.30%
+• Beta: 1.21
+• Analysts' mean recommendation (1=Buy 5=Sell): 1.90
+• Analysts' mean target price: 240.62
+• Employees: 164000
+• RSI (14): 58.73
+
+================================================================================
+
+Error fetching TipRanks data for AAPL: 503 Server Error: fixture
+
+================================================================================
+
+Error fetching TipRanks forecast data for AAPL: 503 Server Error: fixture
+
+================================================================================
+
+Error fetching ValueInvesting.io data for AAPL: 503 Server Error: fixture

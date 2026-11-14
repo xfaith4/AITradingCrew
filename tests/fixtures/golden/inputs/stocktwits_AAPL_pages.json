@@ -1,0 +1,22 @@
+[
+  {
+    "cursor": {"more": true, "since": 900, "max": 1004},
+    "messages": [
+      {"id": 1010, "created_at": "2026-11-12T20:45:10Z", "body": "$AAPL closing strong into earnings season.", "user": {"username": "trader_one"}, "entities": {"sentiment": {"basic": "Bullish"}}},
+      {"id": 1009, "created_at": "2026-11-12T18:02:44Z", "body": "  $AAPL looks heavy under 215, watching for a fade.  ", "user": {"username": "bear_case"}, "entities": {"sentiment": {"basic": "Bearish"}}},
+      {"id": 1008, "created_at": "2026-11-12T15:30:00Z", "body": "Anyone holding $AAPL calls over the weekend?", "user": {"username": "options_fan"}, "entities": {"sentiment": null}},
+      {"id": 1007, "created_at": "2026-11-11T14:31:05Z", "body": "", "user": {"username": "silent_bob"}, "entities": {}},
+      {"id": 1006, "created_at": null, "body": "message without a timestamp is skipped", "user": {"username": "ghost"}},
+      {"id": 1005, "created_at": "2026-11-11T13:00:00Z", "body": "$AAPL volume is light today.", "entities": {"sentiment": {"basic": ""}}}
+    ]
+  },
+  {
+    "cursor": {"more": true, "since": 800, "max": 990},
+    "messages": [
+      {"id": 1004, "created_at": "2026-11-10T21:15:00Z", "body": "$AAPL services numbers keep surprising to the upside.", "user": {"username": "long_term"}, "entities": {"sentiment": {"basic": "bullish"}}},
+      {"id": 1003, "created_at": "2026-11-10T16:20:00Z", "body": "$AAPL neutral here, waiting for the next catalyst.", "user": {"username": "patient_pat"}, "entities": {"sentiment": {"basic": "Neutral"}}},
+      {"id": 1002, "created_at": "2026-11-09T22:00:00Z", "body": "This message is older than since_date and stops paging.", "user": {"username": "too_old"}, "entities": {"sentiment": {"basic": "Bearish"}}},
+      {"id": 1001, "created_at": "2026-11-09T21:00:00Z", "body": "Never reached.", "user": {"username": "never"}, "entities": {"sentiment": {"basic": "Bullish"}}}
+    ]
+  }
+]

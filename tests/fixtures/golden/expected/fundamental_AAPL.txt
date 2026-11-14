@@ -1,0 +1,93 @@
+FINVIZ Fundamental Ratios/KPIs for Apple Inc. (AAPL):
+
+• Major index membership: DJIA, NDX, S&P 500
+• Price-to-Earnings (ttm): 34.12
+• Diluted EPS (ttm): 6.43
+• Market capitalization: 3301.55B
+• Forward Price-to-Earnings (next fiscal year): 29.80
+• Return on Assets (ttm): 27.15%
+• Return on Equity (ttm): 151.30%
+• Beta: 1.21
+• Analysts' mean recommendation (1=Buy 5=Sell): 1.90
+• Analysts' mean target price: 240.62
+• Employees: 164000
+• RSI (14): 58.73
+
+================================================================================
+
+TipRanks AI Stock Analysis (Fundamental) for AAPL:
+
+**Investment Factors:**
+
+**Positive Factors:**
+• **Product Innovation**: new device launches and on-device AI features keep upgrade demand healthy across regions.
+• **Services Growth**: Recurring services revenue continues to expand margins and smooth hardware cycles.
+
+**Negative Factors:**
+• **Regulatory Risk**: app store rules face pressure from regulators in the European Union and the United States.
+• **China Competition**: Local handset makers are taking share in the premium segment of the Chinese market.
+
+
+**Financial Statement Overview:**
+
+**Summary**: Apple shows strong profitability, a solid balance sheet and consistent cash generation across segments.
+
+**Income Statement:**
+• Score: 82
+• Sentiment: Very Positive
+• Analysis: dian for the trailing twelve months, supported by buybacks that lifted earnings per share faster than net income....
+
+**Balance Sheet:**
+• Score: 68
+• Sentiment: Positive
+• Analysis: before long-term debt, which gives flexibility for continued capital returns over the next several quarters....
+
+**Cash Flow:**
+• Score: 79
+• Sentiment: Positive
+• Analysis: cash, and working capital swings remain predictable from quarter to quarter in the reported period....
+
+
+================================================================================
+
+TipRanks Analyst Ratings & Price Forecast for AAPL:
+
+**AAPL Analyst Ratings:**
+• **Overall Rating**: Strong Buy
+• **Total Ratings**: 48
+• **Ratings Breakdown**:
+  - Buy: 47
+  - Hold: 1
+  - Sell: 0
+• **Time Period**: 3 months
+
+
+**AAPL Stock 12 Month Forecast:**
+• **Average Price Target**: $240.62
+• **Upside Potential**: 12.50%
+• **Highest Price Target**: $300.00
+• **Lowest Price Target**: $180.00
+• **Current Price**: $213.88
+• **Number of Analysts**: 48
+
+
+================================================================================
+
+ValueInvesting.io Intrinsic Value Analysis for AAPL:
+
+**AAPL Intrinsic Value Overview:**
+• **Intrinsic Value**: 185.20 USD
+• **Valuation Assessment**: Overvalued
+• **Current Stock Price**: 213.88 USD
+• **Valuation Models**: DCF Model, Peter Lynch
+
+
+**Valuation Summary:**
+
+• **DCF (Growth 5Y)**: 170.10 USD
+• **DCF (EBITDA 5Y)**: 160.00 USD
+• **Fair Value**: 181.00 USD
+
+**Insights:**
+• The stock is overvalued by 13.
+• Our proprietary model suggests a fair value below the market price.

@@ -2,6 +2,15 @@
 
 > Active operational context only. Newest entry first.
 
+## 2026-11-13 — Golden prompt-text fixtures for analyst context builders (A3) (A4 next)
+
+- **Did:** Added tests/test_golden_context.py (11 tests: TI context, VIX, global market, StockTwits x2 + pagination, fundamentals full + partial failure, TimeGPT x2, strict xfail for Finviz UnboundLocalError). Inputs in tests/fixtures/golden/inputs (synthetic provider-shaped: deterministic OHLCV, Twelve Data quote, Yahoo chart, StockTwits pages, trimmed Finviz/TipRanks/ValueInvesting HTML); 9 goldens in tests/fixtures/golden/expected, regenerate with UPDATE_GOLDENS=1. Added .gitattributes (golden dir -text, repo has autocrlf=true). ROADMAP: A3 stamped done; added X8 (finviz UnboundLocalError) and X9 (sys.exit in TwelveDataManager bypasses per-asset except). Committed on main (local, not pushed).
+- **Verified:** uv run pytest tests/test_golden_context.py -q: 10 passed, 1 xfailed. uv run pytest -q: 88 passed, 1 xfailed. Read every golden to confirm intended branches are hit. Not verified: goldens against recorded live responses (needs keyed run); VIX golden assumes local TZ within +/-11h of UTC.
+- **Progress:** Roadmap progress appended: 4/51 items done, phases 0/0, 47 open-items left -> docs/ROADMAP-PROGRESS.md
+- **Safe to proceed:** yes; tests green, A3 committed locally on main, not pushed
+- **Next:** A4: split each analyst into fetch_* (A2 model) and format_* (existing text), keep get_*_context wrappers; check: uv run pytest tests/test_golden_context.py tests/test_analysts_structured.py -q
+- **Owner:** Approve pushing to the fork; provide .env for a keyed run to record live fixtures (A1); decide on keyless demo-data slice.
+
 ## 2026-11-13 — Typed run models (A2) and SQLite run store (A5) (A3 next)
 
 - **Did:** Added ai_trading_crew/models.py (A2: RunManifest, SymbolStatus, PriceBar, IndicatorPoint/Snapshot, SentimentSnapshot, NewsItem, FundamentalSnapshot, ForecastPoint, AnalystStance, Recommendation; Signal enum with -2..2 score; LLM-facing models accept labels like "Very Bullish" and ignore extra keys). Added ai_trading_crew/store/ (A5: schema.py with versioned transactional migrations, run_store.py RunStore over stdlib sqlite3 at output/aitc.sqlite, 11 tables plus schema_version, FK cascade, idempotent upserts, indicator_history query). Added tests/test_models.py (41) and tests/test_store.py (19). Stamped A2 and A5 done in ROADMAP.md. Nothing committed.

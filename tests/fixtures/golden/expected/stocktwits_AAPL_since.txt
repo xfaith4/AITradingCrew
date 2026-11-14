@@ -1,0 +1,17 @@
+Stock: AAPL
+Bullish: 2, Bearish: 1, Neutral: 3
+Messages:
+- 2026-11-12 15:45:10 EST: $AAPL closing strong into earnings season.
+
+- 2026-11-12 13:02:44 EST: $AAPL looks heavy under 215, watching for a fade.
+
+- 2026-11-12 10:30:00 EST: Anyone holding $AAPL calls over the weekend?
+
+- 2026-11-11 09:31:05 EST: 
+
+- 2026-11-11 08:00:00 EST: $AAPL volume is light today.
+
+- 2026-11-10 16:15:00 EST: $AAPL services numbers keep surprising to the upside.
+
+- 2026-11-10 11:20:00 EST: $AAPL neutral here, waiting for the next catalyst.
+

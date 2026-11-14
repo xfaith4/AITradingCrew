@@ -37,6 +37,20 @@
       "next": "A3: capture golden text fixtures for get_ti_context, get_stocktwits_context, get_fundamental_context, format_timegpt_forecast, get_vix, get_global_market from recorded inputs; check: uv run pytest tests/test_golden_context.py -q. If recorded API responses are not available, B1 figures (Plotly builders from store rows) can proceed in parallel since A5 is done.",
       "nextLabel": "A3",
       "owner": "Provide .env with OPENROUTER_*, TWELVE_API_KEY, RAPID_API_KEY, TIMEGPT_API_KEY (A1 fixtures and A3 goldens need one keyed run); approve committing and pushing to the fork; decide on a keyless demo-data slice."
+    },
+    {
+      "type": "handoff",
+      "recordedAt": "2026-11-13T22:15:30-05:00",
+      "summary": "Golden prompt-text fixtures for analyst context builders (A3)",
+      "did": "Added tests/test_golden_context.py (11 tests: TI context, VIX, global market, StockTwits x2 + pagination, fundamentals full + partial failure, TimeGPT x2, strict xfail for Finviz UnboundLocalError). Inputs in tests/fixtures/golden/inputs (synthetic provider-shaped: deterministic OHLCV, Twelve Data quote, Yahoo chart, StockTwits pages, trimmed Finviz/TipRanks/ValueInvesting HTML); 9 goldens in tests/fixtures/golden/expected, regenerate with UPDATE_GOLDENS=1. Added .gitattributes (golden dir -text, repo has autocrlf=true). ROADMAP: A3 stamped done; added X8 (finviz UnboundLocalError) and X9 (sys.exit in TwelveDataManager bypasses per-asset except). Nothing committed.",
+      "verified": "uv run pytest tests/test_golden_context.py -q: 10 passed, 1 xfailed. uv run pytest -q: 88 passed, 1 xfailed. Read every golden to confirm intended branches are hit. Not verified: goldens against recorded live responses (needs keyed run); VIX golden assumes local TZ within +/-11h of UTC.",
+      "progress": "Roadmap progress appended: 4/51 items done, phases 0/0, 47 open-items left -> docs/ROADMAP-PROGRESS.md",
+      "safeToProceed": "yes; tests green, A3 work uncommitted on main pending owner approval",
+      "next": "A4: split each analyst into fetch_* (A2 model) and format_* (existing text), keep get_*_context wrappers; check: uv run pytest tests/test_golden_context.py tests/test_analysts_structured.py -q",
+      "nextLabel": "A4",
+      "owner": "Approve committing A3 (tests/test_golden_context.py, tests/fixtures/golden, .gitattributes, ROADMAP.md); provide .env for a keyed run to record live fixtures (A1); decide on keyless demo-data slice.",
+      "runId": "20261113-220856",
+      "session": 1
     }
   ]
 }
